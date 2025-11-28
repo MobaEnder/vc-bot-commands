@@ -1,13 +1,13 @@
-const { 
+import { 
   Client, 
   GatewayIntentBits, 
   SlashCommandBuilder, 
   REST, 
   Routes, 
   PermissionFlagsBits 
-} = require("discord.js");
+} from "discord.js";
 
-const {
+import {
   joinVoiceChannel,
   createAudioPlayer,
   createAudioResource,
@@ -15,14 +15,14 @@ const {
   getVoiceConnection,
   VoiceConnectionStatus,
   entersState
-} = require("@discordjs/voice");
+} from "@discordjs/voice";
 
-const { Readable } = require("stream");
+import { Readable } from "stream";
+import sodium from "libsodium-wrappers";
 
 // ==== Silent Stream ====
 class Silence extends Readable {
   _read() {
-    // Push a single OPUS silent frame and end the stream immediately.
     this.push(Buffer.from([0xF8, 0xFF, 0xFE]));
     this.push(null);
   }
@@ -100,7 +100,8 @@ async function ensureReady(connection) {
 }
 
 // ==== Events =====
-client.on("clientReady", () => {
+client.on("clientReady", async () => {
+  await sodium.ready; // đảm bảo libsodium sẵn sàng
   console.log(`Bot đã đăng nhập: ${client.user.tag}`);
 });
 
@@ -113,7 +114,7 @@ client.on("interactionCreate", async (interaction) => {
   const isAdmin = interaction.member && interaction.member.permissions && interaction.member.permissions.has(PermissionFlagsBits.Administrator);
 
   if (!isOwner && !isAdmin) {
-    return interaction.reply({ content: "Bạn không có quyền sử dụng lệnh này.", flags:64 });
+    return interaction.reply({ content: "Bạn không có quyền sử dụng lệnh này.", flags: 64 });
   }
 
   const name = interaction.commandName;
@@ -123,15 +124,12 @@ client.on("interactionCreate", async (interaction) => {
     const channel = interaction.guild.channels.cache.get(channelId);
 
     if (!channel || channel.type !== 2) {
-      return interaction.reply({ content: "ID không hợp lệ hoặc không phải voice channel.", ephemeral: true });
+      return interaction.reply({ content: "ID không hợp lệ hoặc không phải voice channel.", flags: 64 });
     }
 
-    // If already tracking this guild, destroy previous connection cleanly first
     const existing = guildAudio.get(interaction.guild.id);
     if (existing && existing.connection) {
-      try {
-        existing.connection.destroy();
-      } catch(e){}
+      try { existing.connection.destroy(); } catch(e){}
       guildAudio.delete(interaction.guild.id);
     }
 
@@ -145,7 +143,6 @@ client.on("interactionCreate", async (interaction) => {
 
     const player = createAudioPlayer();
 
-    // When player becomes idle, replay silence to keep connection alive
     player.on("stateChange", (oldState, newState) => {
       if (newState.status === "idle") {
         setTimeout(() => createAndPlay(player), 500);
@@ -155,9 +152,7 @@ client.on("interactionCreate", async (interaction) => {
     player.on("error", (err) => {
       console.error("Audio player error:", err);
       try { player.stop(true); } catch(e){}
-      setTimeout(() => {
-        try { createAndPlay(player); } catch(e){}
-      }, 1000);
+      setTimeout(() => { try { createAndPlay(player); } catch(e){} }, 1000);
     });
 
     connection.subscribe(player);
@@ -165,7 +160,7 @@ client.on("interactionCreate", async (interaction) => {
     const ready = await ensureReady(connection);
     if (!ready) {
       connection.destroy();
-      return interaction.reply({ content: "Không thể kết nối tới voice. Vui lòng thử lại.", ephemeral: true });
+      return interaction.reply({ content: "Không thể kết nối tới voice. Vui lòng thử lại.", flags: 64 });
     }
 
     createAndPlay(player);
@@ -203,28 +198,20 @@ client.on("interactionCreate", async (interaction) => {
       }
     });
 
-    guildAudio.set(interaction.guild.id, {
-      connection,
-      player,
-      channelId
-    });
+    guildAudio.set(interaction.guild.id, { connection, player, channelId });
 
-    return interaction.reply({ content: `Bot đã join và giữ room **${channel.name}** liên tục.`, ephemeral: false });
+    return interaction.reply({ content: `Bot đã join và giữ room **${channel.name}** liên tục.`, flags: 64 });
   }
 
   if (name === "leave") {
     const info = guildAudio.get(interaction.guild.id);
     if (!info || !info.connection) {
-      return interaction.reply({ content: "Bot hiện không ở trong voice nào.", ephemeral: true });
+      return interaction.reply({ content: "Bot hiện không ở trong voice nào.", flags: 64 });
     }
 
-    try {
-      info.connection.destroy();
-    } catch (e) {
-      console.error("Error destroying connection:", e);
-    }
+    try { info.connection.destroy(); } catch (e) { console.error(e); }
     guildAudio.delete(interaction.guild.id);
-    return interaction.reply({ content: "Bot đã rời voice channel.", ephemeral: false });
+    return interaction.reply({ content: "Bot đã rời voice channel.", flags: 64 });
   }
 });
 
