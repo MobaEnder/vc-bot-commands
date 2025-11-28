@@ -184,8 +184,6 @@ client.on("interactionCreate", async (interaction) => {
                 selfMute: true
               });
               reconnect.subscribe(player);
-            } else {
-              console.log("Connection exists, skipping rejoin.");
             }
           } catch (e) {
             console.error("Reconnect attempt failed:", e);
