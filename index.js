@@ -113,7 +113,7 @@ client.on("interactionCreate", async (interaction) => {
   const isAdmin = interaction.member && interaction.member.permissions && interaction.member.permissions.has(PermissionFlagsBits.Administrator);
 
   if (!isOwner && !isAdmin) {
-    return interaction.reply({ content: "Bạn không có quyền sử dụng lệnh này.", ephemeral: true });
+    return interaction.reply({ content: "Bạn không có quyền sử dụng lệnh này.", flags:64 });
   }
 
   const name = interaction.commandName;
