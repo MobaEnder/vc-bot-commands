@@ -1,17 +1,19 @@
-const { getAuctions } = require('./fetcher');
+const { getAuctionsByWeapon } = require('./fetcher');
 const { matchRiven } = require('./matcher');
 const { notify } = require('./notifier');
 const config = require('./config.json');
 
 const seen = new Set();
-let errorCooldown = false;
+let blockedCooldown = false;
 
 module.exports = function startRivenChecker(client) {
-  setInterval(async () => {
-    if (errorCooldown) return;
+  console.log("🔍 Riven checker started");
+
+  async function loop() {
+    if (blockedCooldown) return scheduleNext();
 
     try {
-      const auctions = await getAuctions();
+      const auctions = await getAuctionsByWeapon(config.weapon);
 
       for (const auction of auctions) {
         if (seen.has(auction.id)) continue;
@@ -22,11 +24,26 @@ module.exports = function startRivenChecker(client) {
         }
       }
     } catch (err) {
-      console.error("Riven checker error:", err.message);
+      console.error("Riven checker:", err.message);
 
-      // ⛔ tránh spam log + tránh bị block
-      errorCooldown = true;
-      setTimeout(() => errorCooldown = false, 15000);
+      // 🛑 nếu bị block → nghỉ lâu hơn
+      if (err.message.includes("Cloudflare")) {
+        blockedCooldown = true;
+        setTimeout(() => {
+          blockedCooldown = false;
+        }, 30_000); // nghỉ 30s
+      }
     }
-  }, 5000);
+
+    scheduleNext();
+  }
+
+  function scheduleNext() {
+    // ⏱ random delay 7–12s (rất quan trọng)
+    const delay = 7000 + Math.random() * 5000;
+    setTimeout(loop, delay);
+  }
+
+  // start sau khi bot online 5s
+  setTimeout(loop, 5000);
 };
