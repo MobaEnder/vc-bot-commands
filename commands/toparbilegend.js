@@ -27,10 +27,10 @@ module.exports = {
         }
 
         const embed = new EmbedBuilder()
-            .setTitle('🏆 TOP ARBITRATIONS LEGEND')
+            .setTitle('🏆 TOP DPS ARBITRATIONS LEGEND')
             .setColor(0xFFD700)
             .setDescription(description)
-            .setFooter({ text: 'Arbitrations Ranking' })
+            .setFooter({ text: 'DPS Arbitrations Ranking' })
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });
