@@ -10,12 +10,12 @@ module.exports = {
         // ====== SETTING TOP + PHẦN THƯỞNG ======
         const topList = [
             { id: '1451400932733616289', reward: '🎁 1 Skin Tự Chọn' },
-            { id: '552876985676726275', reward: '🎁 x5 Oni Forma Bundel' },
-            { id: '742738400330907741', reward: '🎁 x10 Forma Bundel' },
-            { id: '784321064515141632', reward: '🎁 x5 Forma Bundel' },
-            { id: '929228634563182622', reward: '🎁 x5 Forma Bundel' },
-            { id: '715579253051359342', reward: '🎁 x5 Forma Bundel' },
-            { id: '692226401398423592', reward: '🎁 x5 Forma Bundel' }
+            { id: '552876985676726275', reward: '🎁 x5 Oni Forma Bundle' },
+            { id: '742738400330907741', reward: '🎁 x10 Forma Bundle' },
+            { id: '784321064515141632', reward: '🎁 x5 Forma Bundle' },
+            { id: '929228634563182622', reward: '🎁 x5 Forma Bundle' },
+            { id: '715579253051359342', reward: '🎁 x5 Forma Bundle' },
+            { id: '692226401398423592', reward: '🎁 x5 Forma Bundle' }
         ];
 
         let description = '';
