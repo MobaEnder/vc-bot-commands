@@ -15,6 +15,9 @@ module.exports = {
                 "[WISP](https://www.youtube.com/watch?v=AGKjrZv7cjk)\n" +
                 "[VOLT](https://www.youtube.com/watch?v=MQPTVtw8Lhk)\n\n" +
 
+                 "**🎬 Video DPS Overview-Casta/Seimeni:**\n" +
+                "[Saryn](https://www.youtube.com/watch?v=pn_rl_LaWLk&t)\n" +
+
                 "**📚 Guide Tiếng Anh:**\n" +
                 "[Arbi EL](https://docs.google.com/document/d/14yAA4rv82MVjDJKasm70oL_peegCHPQioDeMGdvf4DM/edit?tab=t.0)\n\n" +
 
