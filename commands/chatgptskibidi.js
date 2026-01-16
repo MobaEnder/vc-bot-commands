@@ -24,21 +24,29 @@ module.exports = {
           query,
           search_depth: 'basic',
           max_results: 5,
-          include_answer: true
+          include_answer: true,
+          include_raw_content: true
         })
       });
 
       const data = await res.json();
+      console.log(data);
 
-      if (!data.answer) {
-        console.error(data);
-        return interaction.editReply('❌ Không tìm được câu trả lời.');
+      let text = data.answer || data.content;
+
+      if (!text && data.results?.length) {
+        text = data.results
+          .slice(0, 3)
+          .map((r, i) => `**${i + 1}. ${r.title}**\n${r.content}`)
+          .join('\n\n');
       }
+
+      if (!text) return interaction.editReply('❌ Không tìm được câu trả lời.');
 
       const embed = new EmbedBuilder()
         .setTitle('🤖 Kết quả tìm kiếm')
         .setColor(0x2ECC71)
-        .setDescription(data.answer)
+        .setDescription(text.slice(0, 4000))
         .setFooter({ text: 'Nguồn: Tavily Search' });
 
       await interaction.editReply({ embeds: [embed] });
