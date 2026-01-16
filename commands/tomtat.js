@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -6,10 +6,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('tomtat')
-    .setDescription('Tóm tắt đoạn chat bằng AI (Gemini)')
+    .setDescription('Tóm tắt 100 tin nhắn mới nhất trong channel bằng AI')
     .addStringOption(opt =>
-      opt.setName('link')
-        .setDescription('Link tin nhắn bắt đầu cần tóm tắt')
+      opt.setName('channel_id')
+        .setDescription('ID channel cần tóm tắt')
         .setRequired(true)
     ),
 
@@ -17,37 +17,20 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true });
 
     try {
-      const link = interaction.options.getString('link');
-
-      // Parse link an toàn
-      const match = link.match(/channels\/(\d+)\/(\d+)\/(\d+)/);
-      if (!match) {
-        return interaction.editReply('❌ Link tin nhắn không hợp lệ.');
-      }
-
-      const [, guildId, channelId, messageId] = match;
-
+      const channelId = interaction.options.getString('channel_id');
       const channel = await interaction.client.channels.fetch(channelId);
+
       if (!channel || !channel.isTextBased()) {
-        return interaction.editReply('❌ Không tìm thấy channel hợp lệ.');
+        return interaction.editReply('❌ Channel ID không hợp lệ hoặc không phải text channel.');
       }
 
-      let allMessages = [];
-      let lastId = messageId;
+      const messages = await channel.messages.fetch({ limit: 100 });
 
-      while (true) {
-        const fetched = await channel.messages.fetch({ after: lastId, limit: 100 });
-        if (!fetched.size) break;
-        allMessages.push(...fetched.values());
-        lastId = fetched.last().id;
-        if (allMessages.length >= 500) break; // chống spam
+      if (!messages.size) {
+        return interaction.editReply('❌ Channel này chưa có tin nhắn.');
       }
 
-      if (!allMessages.length) {
-        return interaction.editReply('❌ Không có tin nhắn nào sau tin này.');
-      }
-
-      const text = allMessages
+      const text = messages
         .reverse()
         .map(m => `${m.author.username}: ${m.content}`)
         .join('\n');
